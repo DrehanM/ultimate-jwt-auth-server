@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
-	"github.com/joho/godotenv"
-
 )
 
 const defaultProtocol = "http"

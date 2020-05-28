@@ -74,7 +74,7 @@ func (env *Env) VerifyAndRegisterNewUser(c *gin.Context) *UserAuthInfo {
 		return nil
 	}
 
-	user = UserAuthInfo {
+	user = UserAuthInfo{
 		Email: credentials.Email,
 		Username: credentials.Username,
 		HashedPassword: hashedPassword,

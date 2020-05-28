@@ -1,9 +1,10 @@
 package main
 
 import (
+
 	"fmt"
-"github.com/jinzhu/gorm"
-_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 // postgres driver
 _ "github.com/lib/pq"
