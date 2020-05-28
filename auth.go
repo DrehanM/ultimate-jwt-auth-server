@@ -1,19 +1,14 @@
 package main
 
 import (
+
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+
 )
 
-var jwtKey = []byte(os.Getenv("API_SECRET"))
-
-type Credentials struct {
-	Password 	string `json:"password"`
-	Email 		string `json:"email"`
-	Username 	string `json:"username"`
-
-}
+var jwtKey = []byte(os.Getenv("API_SECRET")) // secret to sign JWT
 
 func (env *Env) Login(c *gin.Context) {
 	user := env.VerifyUser(c)
@@ -26,7 +21,7 @@ func (env *Env) Login(c *gin.Context) {
 
 func (env *Env) Register(c *gin.Context) {
 	user := env.VerifyAndRegisterNewUser(c)
-	if user == (nil) {
+	if user == nil {
 		return
 	}
 
@@ -34,11 +29,18 @@ func (env *Env) Register(c *gin.Context) {
 }
 
 func (env *Env) Refresh(c *gin.Context) {
+	user := env.GetUserFromRefreshToken(c)
+	if user == nil {
+		return
+	}
 
-
+	env.processTokens(c, user)
 }
 
-func (env *Env) processTokens(c *gin.Context, user *User) {
+
+// Return access token and access token expiry as payload
+// Return refresh token as HttpOnly cookie
+func (env *Env) processTokens(c *gin.Context, user *UserAuthInfo) {
 	accessToken, accessExpiry, err := env.CreateAccessToken(c, user)
 	if err != nil {
 		return
@@ -47,7 +49,7 @@ func (env *Env) processTokens(c *gin.Context, user *User) {
 	if err != nil {
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "access_token_expiry": accessExpiry.Unix()})
+
 	http.SetCookie(
 		c.Writer,
 		&http.Cookie{
@@ -55,10 +57,13 @@ func (env *Env) processTokens(c *gin.Context, user *User) {
 			Value:    refreshToken,
 			Expires:  refreshExpiry,
 			Path:     "/refresh",
-			Domain:   "", //need to change this
-			Secure:   true,
+			Domain:   domain,
+			Secure:   protocol == "https",
 			HttpOnly: true,
 		},
 	)
+
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "access_token_expiry": accessExpiry.Unix()})
+
 }
 

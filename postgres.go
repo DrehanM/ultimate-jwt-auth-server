@@ -1,7 +1,7 @@
-package database
+package main
 
 import (
-"fmt"
+	"fmt"
 "github.com/jinzhu/gorm"
 _ "github.com/jinzhu/gorm/dialects/postgres"
 
@@ -17,7 +17,7 @@ type Db struct {
 
 // New makes a new database using the connection string and
 // returns it, otherwise returns the error
-func New(connString string) (*Db, error) {
+func InitDB(connString string) (*Db, error) {
 	//db, err := sql.Open("postgres", connString)
 	db, err := gorm.Open("postgres", connString)
 	if err != nil {
@@ -34,7 +34,7 @@ func New(connString string) (*Db, error) {
 
 	db = db.Debug() //remove when using outside of dev
 
-	db.AutoMigrate() //database migration
+	db.AutoMigrate(UserAuthInfo{}) //database migration
 
 
 	return &Db{db}, nil
@@ -43,6 +43,8 @@ func New(connString string) (*Db, error) {
 // ConnString returns a connection string based on the parameters it's given
 // This would normally also contain the password, however we're not using one
 func ConnString(host string, port string, user string, password string, dbName string) string {
+
+	//if host is not given, init with default postgres settings
 	if host == "" {
 		host = "127.0.0.1"
 		port = "5432"
@@ -51,7 +53,7 @@ func ConnString(host string, port string, user string, password string, dbName s
 		password = "password"
 
 	}
-	fmt.Printf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
+	fmt.Printf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s\n",
 		host,
 		port,
 		user,

@@ -1,30 +1,54 @@
 package main
 
 import (
-	"alo-auth/database"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
+	"github.com/joho/godotenv"
+
 )
 
+const defaultProtocol = "http"
 const defaultPort = "3010"
+const defaultHost = "localhost"
 
 var (
 	router = gin.Default()
 )
 
+// wrapper struct to pass db into resolvers
 type Env struct {
-	db *database.Db
+	db *Db
 }
 
+var protocol string
+var host string
+var domain string
+
 func main() {
+
+	// fetch environment variables in .env
+	err := godotenv.Load(".env")
+
+	protocol = os.Getenv("PROTOCOL")
+	if protocol == "" {
+		protocol = defaultProtocol
+	}
+
+	host = os.Getenv("HOST")
+	if host == "" {
+		host = defaultHost
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
 	}
 
-	db, err := database.New(
-		database.ConnString(
+	domain =  host
+
+	db, err := InitDB(
+		ConnString(
 			os.Getenv("DB_HOST"),
 			os.Getenv("DB_PORT"),
 			os.Getenv("DB_USER"),
@@ -38,10 +62,10 @@ func main() {
 
 	env := &Env{db: db}
 
-	router.POST("/login", Env.Login)
-	router.POST("/register", Env.Register)
-	router.POST("/refresh", Env.Refresh)
+	router.POST("/login", env.Login)
+	router.POST("/register", env.Register)
+	router.POST("/refresh", env.Refresh)
 
-	log.Fatal(router.Run(":8080"))
+	log.Fatal(router.Run(":"+port))
 
 }
