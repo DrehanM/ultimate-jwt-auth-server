@@ -1,17 +1,21 @@
 package main
 
 import (
-	"alo-auth/graph"
-	"alo-auth/graph/generated"
+	"alo-auth/database"
+	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
 	"os"
-
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 )
 
-const defaultPort = "8080"
+const defaultPort = "3010"
+
+var (
+	router = gin.Default()
+)
+
+type Env struct {
+	db *database.Db
+}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -19,11 +23,25 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	db, err := database.New(
+		database.ConnString(
+			os.Getenv("DB_HOST"),
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_USER"),
+			os.Getenv("DB_PASSWORD"),
+			os.Getenv("DB_NAME"),
+		),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	env := &Env{db: db}
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	router.POST("/login", Env.Login)
+	router.POST("/register", Env.Register)
+	router.POST("/refresh", Env.Refresh)
+
+	log.Fatal(router.Run(":8080"))
+
 }
