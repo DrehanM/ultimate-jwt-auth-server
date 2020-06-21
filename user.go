@@ -25,6 +25,7 @@ type Credentials struct {
 	Password 	string `json:"password"`
 	Email 		string `json:"email"`
 	Username 	string `json:"username"`
+	Credentials string `json:"credentials"`
 }
 
 
@@ -100,13 +101,13 @@ func (env *Env) VerifyUser(c *gin.Context) *UserAuthInfo {
 	var user UserAuthInfo
 
 	err := c.ShouldBindJSON(&credentials)
-	if err != nil {
+	if err != nil || credentials.Credentials == "" || credentials.Password == "" {
 		c.JSON(http.StatusUnprocessableEntity, "invalid json provided")
 		return nil
 	}
 
 	err = env.db.
-		Where("username = ? OR email = ?", credentials.Username, credentials.Email).
+		Where("username = ? OR email = ?", credentials.Credentials, credentials.Credentials).
 		First(&user).
 		Error
 
@@ -114,6 +115,7 @@ func (env *Env) VerifyUser(c *gin.Context) *UserAuthInfo {
 		c.JSON(http.StatusUnauthorized, "no such user")
 		return nil
 	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "unexpected error")
 		return nil
