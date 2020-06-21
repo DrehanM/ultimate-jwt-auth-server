@@ -9,16 +9,25 @@ import (
 
 const REFRESH_TOKEN_LENGTH = 64
 
+type Claims struct {
+	Authenticated bool `json:"authenticated"`
+	IsAdmin bool 	`json:"is_admin"`
+	Exp 	int64 	`json:"exp"`
+	UserID	string 	`json:"user_id"`
+	jwt.StandardClaims
+}
+
 // Generate JWT for the given user
 // Return the generated signed token string with expiry (default = 15 min -- should be very short)
 func (env *Env) CreateAccessToken(c *gin.Context, user *UserAuthInfo) (string, time.Time, error) {
 	expiry :=  time.Now().Add(time.Minute * 15)
 
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["token_type"] = "access"
-	claims["user_id"] = user.ID
-	claims["exp"] = expiry.Unix() // 15 minutes
+	claims := Claims{
+		Authenticated: true,
+		IsAdmin: false,
+		Exp: expiry.Unix(),
+		UserID: user.ID,
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)

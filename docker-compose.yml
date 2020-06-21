@@ -1,0 +1,55 @@
+version: '3'
+services:
+  app:
+    container_name: jwt_auth
+    build: .
+    ports:
+      - '3010:3010'
+    restart: on-failure
+    volumes:
+      - api:/usr/src/app/
+    depends_on:
+      - auth-db
+    env_file:
+      - .env
+    networks:
+      - alo
+
+
+  auth-db:
+    image: postgres:latest
+    container_name: auth_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+    ports:
+      - '5432:5432'
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    networks:
+      - alo
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - auth-db
+    ports:
+      - "5050:80"
+    networks:
+      - alo
+    restart: unless-stopped
+
+volumes:
+  api:
+  database_postgres:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  alo:
+    driver: bridge

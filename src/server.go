@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 const defaultProtocol = "http"
 const defaultPort = "3010"
-const defaultHost = "localhost"
+const defaultHost = "127.0.0.1"
 
 var (
 	router = gin.Default()
@@ -27,7 +28,7 @@ var domain string
 func main() {
 
 	// fetch environment variables in .env
-	err := godotenv.Load(".env")
+	//err := godotenv.Load("../.env")
 
 	protocol = os.Getenv("PROTOCOL")
 	if protocol == "" {
@@ -44,8 +45,7 @@ func main() {
 		port = defaultPort
 	}
 
-	domain =  host
-
+	domain = host
 	db, err := InitDB(
 		ConnString(
 			os.Getenv("DB_HOST"),
@@ -58,6 +58,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, //need to change
+		AllowMethods:     []string{"POST"},
+		AllowHeaders:     []string{"Content-Type"},
+		AllowCredentials: true,
+	}))
+
 
 	env := &Env{db: db}
 

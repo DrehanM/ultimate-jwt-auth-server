@@ -62,7 +62,7 @@ func (env *Env) processTokens(c *gin.Context, user *UserAuthInfo) {
 		},
 	)
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "access_token_expiry": accessExpiry.Unix()})
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "access_token_expiry": accessExpiry.Unix(), "id": user.ID})
 
 }
 
